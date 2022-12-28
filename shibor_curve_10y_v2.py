@@ -1,6 +1,6 @@
-# 假设今天是2022.7.29
+# 2022.7.29
 '''
-1. IRS-Shibor3M contract details：
+IRS-Shibor3M contract details：
 · 交易方式：T+1（如2018.1.25-2018.4.24的浮动利率水平在2018.1.24确定）
 · 支付日调整：经调整的下一营业日
 · 支付周期：3M
@@ -23,7 +23,9 @@ import matplotlib.pyplot as plt
 today = ql.Date(29,7,2022)
 china_calendar = ql.China()
 
-### step1: get raw data
+
+### step1: get raw data ###
+
 def get_shibor_data():
     '''
     terms: o/n, 1w, 2w, 1m, 3m
@@ -46,7 +48,8 @@ def get_irs_data():
     return newest_data
 
 
-### step2: integrate the data
+### step2: integrate the data ###
+
 def get_integrated_data():
     '''
 
@@ -102,7 +105,8 @@ def get_integrated_data():
     return  df
 
 
-### step3: get spot rate and DF
+### step3: get spot rate and DF ###
+
 data = get_integrated_data()
 print(data)
 print('-'*60)
@@ -113,7 +117,7 @@ def spotrateDF(method, data):
     '''
     t = np.array((data.end_date - data.start_date).dt.days / 365)  # t是maturity array
 
-    '''step01 求o/n, 1w, 2w, 1m, 3m期限的DF(t)及spot_rate(t)'''
+    # step01 求o/n, 1w, 2w, 1m, 3m期限的DF(t)及spot_rate(t)
     DF = np.array(1 / (1 + data.interest / 100 * (data.end_date - data.start_date).dt.days / 360))
     spot_rate = -np.log(DF) / t
 
@@ -125,7 +129,7 @@ def spotrateDF(method, data):
     Y_1 = data[data.term == '1Y'].index.tolist()  # 查询期限为1Y的行序号
 
 
-    '''step02 求6m, 9m, 1y期限的DF(t)及spot_rate(t)'''
+    # step02 求6m, 9m, 1y期限的DF(t)及spot_rate(t)
     while (i < Y_1[0] + 1):  # 当行号i对应的term为6m, 9m, 1y
         DF[i] = (1 - data.interest[i] / 100 * add[i - 1]) / (1 + data.interest[i] / 100 * (data.end_date[i] - data.end_date[i - 1]).days / 365)    # 更新DF中6m, 9m, 1y期限的value
         add[i] = (data.end_date[i] - data.end_date[i - 1]).days / 365 * DF[i] + add[i - 1]
@@ -133,7 +137,7 @@ def spotrateDF(method, data):
     spot_rate = -np.log(DF) / t  # 根据更新后的DF，重新计算1y及以内的spot rate
 
 
-    '''step03 处理15m, 18m, 21m, 2y, 27m, ...'''
+    # step03 处理15m, 18m, 21m, 2y, 27m, ...
     # 寻找interest列的所有的NaN的索引，存入loc列表
     for columname in data.columns:
         if data[columname].count() != len(data):
@@ -201,7 +205,8 @@ def spotrateDF(method, data):
     return spot_rate, DF
 
 
-### step3.5: generate the curve function
+### step3.5: generate the curve function ###
+
 def curve_func(method, source, maturity, t):
     '''
     该函数用于根据自变量maturity和因变量source，按照method指定的interpolation方法，生成spot rate function f(t)或者DF function f(t)
@@ -237,9 +242,10 @@ def curve_func(method, source, maturity, t):
 
 
 
-### step4: visualize the results
+### step4: visualize the results ###
+
 def visualization(data):
-    '''输出即期利率，贴现因子结果'''
+    '''return the results of spot rate and discount factor'''
 
     spot_rate_1 = spotrateDF(1, data)[0]
     DF_1 = spotrateDF(1, data)[1]
@@ -262,12 +268,10 @@ def visualization(data):
               data.term[i], '  discount factor=', round(DF_4[i], 6), '  spot rate=', round(spot_rate_4[i] * 100, 4),'%')
         print('*'*120)
         i = i+1
-
-    #绘图按照计息周期插值的零息曲线和贴现因子曲线
+        
     mpl.rcParams['font.sans-serif']=['SimHei']
     mpl.rcParams['axes.unicode_minus']=False
 
-    # zero curve
     mat = list(np.array((data.end_date - data.start_date).dt.days / 365))
     methods = {
         1:'Piecewise linear zero',
