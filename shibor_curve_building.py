@@ -4,7 +4,7 @@ IRS-Shibor3M contract details：
 · 交易方式：T+1（如2018.1.25-2018.4.24的浮动利率水平在2018.1.24确定）
 · 支付日调整：经调整的下一营业日
 · 支付周期：3M
-· 计息基准：固定端actual/365（单利），浮动端actual/360（单利）
+· 计息基准：fixed leg actual/365（单利），floating leg actual/360（单利）
 
 今天是2022.7.29，对于构成今天swap rate curve的irs，其起息日为2022.7.30，
 '''
